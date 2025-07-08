@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Consent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js"></script>
+</head>
+<body>
+    <div class="privacy-modal-container">
+        <h1 class="privacy-heading">We value your privacy - Please review and accept</h1>
+        <p class="privacy-desc">At Chalo, we need to collect your personal data to provide our services, and you have the right to manage it. <br> <br>Your privacy matters to us, so please take a moment to check our updated Privacy Policy. Without consent, access to the app will not be possible.</p>
+        <div class="privacy-info-box">
+            <ul>
+                <li><span class="privacy-info-title">Personal info:</span> <span class="privacy-info-desc">Name, phone number, gender, age, Aadhar (if applicable).</span></li>
+                <li><span class="privacy-info-title">App and travel:</span> <span class="privacy-info-desc">Pass ID, Chalo Card, routes, stops, transaction and search history.</span></li>
+                <li><span class="privacy-info-title">Financial:</span> <span class="privacy-info-desc">Payment details, wallet balance, ID, electricity info.</span></li>
+                <li><span class="privacy-info-title">Location and device:</span> <span class="privacy-info-desc">Coordinates, device ID, carrier, WiFi, screen size, app version.</span></li>
+                <li><span class="privacy-info-title">System:</span> <span class="privacy-info-desc">Language preference, feature usage and performance analytics.</span></li>
+            </ul>
+        </div>
+        <p class="privacy-desc">Ticketing, live tracking, enhanced user experience, Chalo/ third party product/ services' promotions, security, compliance, research and analytics..</p>
+        <div class="privacy-btn-group">
+             <p class="privacy-consent">I am above 18 years, and have read, understood, and consent to Chalo's privacy policy. / My child is below 18 years, and I as the parent have read, understood, and consented to Chalo's privacy policy.</p>
+            <button class="privacy-btn accept">Accept</button>
+            <button class="privacy-btn deny">Deny</button>
+            <button class="privacy-btn skip hidden" id="skipButton">Skip for Now</button>
+        </div>
+    </div>
+</body>
+</html>
