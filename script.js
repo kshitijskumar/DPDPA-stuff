@@ -61,10 +61,34 @@ function notifyPlatform(eventType) {
   }
 }
 
+function showConfirmationModal() {
+  const modal = document.getElementById('confirmationModal');
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function hideConfirmationModal() {
+  const modal = document.getElementById('confirmationModal');
+  modal.classList.add('hidden');
+  document.body.style.overflow = ''; // Restore scrolling
+}
+
+function handleDenyConfirmation() {
+  hideConfirmationModal();
+  // Execute the original deny logic
+  notifyPlatform('deny');
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   const acceptButton = document.querySelector('.privacy-btn.accept');
   const denyButton = document.querySelector('.privacy-btn.deny');
   const skipButton = document.getElementById('skipButton');
+  
+  // Modal elements
+  const modal = document.getElementById('confirmationModal');
+  const modalClose = document.getElementById('modalClose');
+  const confirmDeny = document.getElementById('confirmDeny');
+  const cancelDeny = document.getElementById('cancelDeny');
 
   if (acceptButton) {
     acceptButton.addEventListener('click', function () {
@@ -75,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (denyButton) {
     denyButton.addEventListener('click', function () {
-      notifyPlatform('deny');
+      showConfirmationModal();
       removeButtonFocus(this);
     });
   }
@@ -86,6 +110,41 @@ document.addEventListener('DOMContentLoaded', function () {
       removeButtonFocus(this);
     });
   }
+
+  // Modal event listeners
+  if (modalClose) {
+    modalClose.addEventListener('click', function () {
+      hideConfirmationModal();
+    });
+  }
+
+  if (confirmDeny) {
+    confirmDeny.addEventListener('click', function () {
+      handleDenyConfirmation();
+    });
+  }
+
+  if (cancelDeny) {
+    cancelDeny.addEventListener('click', function () {
+      hideConfirmationModal();
+    });
+  }
+
+  // Close modal when clicking outside
+  if (modal) {
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+        hideConfirmationModal();
+      }
+    });
+  }
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      hideConfirmationModal();
+    }
+  });
 
   console.log('Platform:', getPlatform());
 });
