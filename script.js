@@ -1,138 +1,213 @@
+let showSkipButton = false;
+
 // Loader control functions
 function showLoader() {
-  const loader = document.getElementById('fullscreenLoader');
-  if (loader) {
-      loader.classList.remove('hidden');
-      document.body.style.overflow = 'hidden'; // Prevent scrolling
-  }
+    const loader = document.getElementById('fullscreenLoader');
+    if (loader) {
+        loader.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    }
 }
 
 function hideLoader() {
-  const loader = document.getElementById('fullscreenLoader');
-  if (loader) {
-      loader.classList.add('hidden');
-      document.body.style.overflow = 'auto'; // Restore scrolling
-  }
-}
-
-// Platform notification functions
-function notifyPlatform(eventType) {
-    const payload = { message: `privacy_${eventType}` };
-  
-    try {
-      // :white_check_mark: iOS
-      if (window.webkit?.messageHandlers?.nativeApp) {
-        window.webkit.messageHandlers.nativeApp.postMessage(payload);
-      }
-      // :white_check_mark: Android
-      else if (typeof AndroidInterface !== 'undefined') {
-        const methodName = `${eventType}Clicked`;
-        if (typeof AndroidInterface[methodName] === 'function') {
-          AndroidInterface[methodName]();
-        }
-      }
-      // :white_check_mark: Web fallback
-      else if (typeof window.postMessage === 'function') {
-        window.postMessage(payload, '*');
-      }
-    } catch (error) {
-      console.error(`Error during ${eventType} click`, error);
-      alert(`Privacy policy ${eventType}`);
+    const loader = document.getElementById('fullscreenLoader');
+    if (loader) {
+        loader.classList.add('hidden');
+        document.body.style.overflow = 'auto'; // Restore scrolling
     }
-  }
+}
 
 // Global function to hide loader (can be called from native platforms)
 window.hideConsentLoader = function() {
-  hideLoader();
+    hideLoader();
 };
 
 // Global function to show loader (can be called from native platforms)
 window.showConsentLoader = function() {
-  showLoader();
+    showLoader();
 };
 
-// DOM Ready function
-document.addEventListener('DOMContentLoaded', function() {
-  // DOM elements
-  const acceptBtn = document.getElementById('acceptBtn');
-  const denyBtn = document.getElementById('denyBtn');
-  const skipBtn = document.getElementById('skipButton');
-  const confirmationModal = document.getElementById('confirmationModal');
+function getPlatform() {
+  if (typeof AndroidInterface !== 'undefined') return 'android';
+  if (window.webkit?.messageHandlers) return 'ios';
+  return 'web';
+}
+
+function configureConsentUI(shouldShowSkip) {
+  try {
+    console.log("Received skip button configuration:", shouldShowSkip);
+    showSkipButton = shouldShowSkip;
+    updateSkipButtonVisibility(shouldShowSkip);
+    return "Configuration applied successfully";
+  } catch (error) {
+    console.error("Error applying configuration:", error);
+    return "Error applying configuration";
+  }
+}
+
+function updateSkipButtonVisibility(shouldShow) {
+  const skipButton = document.getElementById('skipButton');
+  if (skipButton) {
+    skipButton.classList.toggle('hidden', !shouldShow);
+    console.log(`Skip button ${shouldShow ? 'shown' : 'hidden'}`);
+  }
+}
+
+function toggleSkipButton(show) {
+  updateSkipButtonVisibility(show);
+  showSkipButton = show;
+  console.log(`Skip button manually ${show ? 'shown' : 'hidden'}`);
+}
+
+function removeButtonFocus(button) {
+  if (button) button.blur();
+}
+
+function notifyPlatform(eventType) {
+  const payload = { message: `privacy_${eventType}` };
+  
+  // Enhanced message format with timestamp
+  const message = {
+    action: eventType,
+    data: {
+      consent: eventType === 'accept' ? true : eventType === 'deny' ? false : 'skipped',
+      timestamp: new Date().toISOString()
+    },
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    // :white_check_mark: iOS
+    if (window.webkit?.messageHandlers?.nativeApp) {
+      window.webkit.messageHandlers.nativeApp.postMessage(payload);
+    }
+    // :white_check_mark: iOS - New consent handler interface
+    if (window.webkit?.messageHandlers?.consentHandler) {
+      window.webkit.messageHandlers.consentHandler.postMessage(message);
+    }
+    // :white_check_mark: Android - Fixed to use original naming convention
+    else if (typeof AndroidInterface !== 'undefined') {
+      if (eventType === 'accept') {
+        AndroidInterface.acceptClicked();
+      } else if (eventType === 'deny') {
+        AndroidInterface.denyClicked();
+      } else if (eventType === 'skip') {
+        AndroidInterface.skipClicked();
+      }
+    }
+    // :white_check_mark: Android - New consent handler interface
+    if (typeof Android !== 'undefined' && Android.onConsentAction) {
+      Android.onConsentAction(JSON.stringify(message));
+    }
+    // :white_check_mark: Web fallback
+    else if (typeof window.postMessage === 'function') {
+      window.postMessage(payload, '*');
+    }
+    // :white_check_mark: Web notification (postMessage to parent window)
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(message, '*');
+    }
+  } catch (error) {
+    console.error(`Error during ${eventType} click`, error);
+    alert(`Privacy policy ${eventType}`);
+  }
+  
+  // Console log for debugging
+  console.log('Privacy Consent Action:', message);
+}
+
+function showConfirmationModal() {
+  const modal = document.getElementById('confirmationModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+}
+
+function hideConfirmationModal() {
+  const modal = document.getElementById('confirmationModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scrolling
+  }
+}
+
+function handleDenyConfirmation() {
+  hideConfirmationModal();
+  showLoader();
+  // Execute the original deny logic
+  notifyPlatform('deny');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const acceptButton = document.querySelector('.privacy-btn.accept');
+  const denyButton = document.querySelector('.privacy-btn.deny');
+  const skipButton = document.getElementById('skipButton');
+  
+  // Modal elements
+  const modal = document.getElementById('confirmationModal');
   const modalClose = document.getElementById('modalClose');
-  const cancelDeny = document.getElementById('cancelDeny');
   const confirmDeny = document.getElementById('confirmDeny');
+  const cancelDeny = document.getElementById('cancelDeny');
 
-  // Event listeners
-  acceptBtn.addEventListener('click', function() {
+  if (acceptButton) {
+    acceptButton.addEventListener('click', function () {
       showLoader();
-      notifyPlatform('accept', {
-          consent: true,
-          timestamp: new Date().toISOString()
-      });
-  });
+      notifyPlatform('accept');
+      removeButtonFocus(this);
+    });
+  }
 
-  denyBtn.addEventListener('click', function() {
-      confirmationModal.classList.remove('hidden');
-  });
+  if (denyButton) {
+    denyButton.addEventListener('click', function () {
+      showConfirmationModal();
+      removeButtonFocus(this);
+    });
+  }
 
-  skipBtn.addEventListener('click', function() {
+  // :white_check_mark: Skip button functionality preserved
+  if (skipButton) {
+    skipButton.addEventListener('click', function () {
       showLoader();
-      notifyPlatform('skip', {
-          consent: 'skipped',
-          timestamp: new Date().toISOString()
-      });
-  });
+      notifyPlatform('skip');
+      removeButtonFocus(this);
+    });
+  }
 
-  confirmDeny.addEventListener('click', function() {
-      confirmationModal.classList.add('hidden');
-      showLoader();
-      notifyPlatform('deny', {
-          consent: false,
-          timestamp: new Date().toISOString()
-      });
-  });
+  // Modal event listeners
+  if (modalClose) {
+    modalClose.addEventListener('click', function () {
+      hideConfirmationModal();
+    });
+  }
 
-  cancelDeny.addEventListener('click', function() {
-      confirmationModal.classList.add('hidden');
-  });
+  if (confirmDeny) {
+    confirmDeny.addEventListener('click', function () {
+      handleDenyConfirmation();
+    });
+  }
 
-  modalClose.addEventListener('click', function() {
-      confirmationModal.classList.add('hidden');
-  });
+  if (cancelDeny) {
+    cancelDeny.addEventListener('click', function () {
+      hideConfirmationModal();
+    });
+  }
 
   // Close modal when clicking outside
-  confirmationModal.addEventListener('click', function(e) {
-      if (e.target === confirmationModal) {
-          confirmationModal.classList.add('hidden');
+  if (modal) {
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) {
+        hideConfirmationModal();
       }
-  });
-});
-
-// Handle messages from parent window (for web integration)
-window.addEventListener('message', function(event) {
-  if (event.data && event.data.action === 'hideLoader') {
-      hideLoader();
+    });
   }
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      hideConfirmationModal();
+    }
+  });
+
+  console.log('Platform:', getPlatform());
 });
-
-// Example usage and documentation
-// console.log(`
-// Privacy Consent Loader Integration:
-
-// Web Integration:
-// - Listen for postMessage events from this iframe
-// - Call window.hideConsentLoader() to hide the loader
-
-// Android Integration:
-// - Implement Android.onConsentAction(jsonString) in your WebView
-// - Call webView.loadUrl("javascript:window.hideConsentLoader()") to hide loader
-
-// iOS Integration:
-// - Add 'consentHandler' to WKWebView messageHandlers
-// - Call webView.evaluateJavaScript("window.hideConsentLoader()") to hide loader
-
-// Actions sent to platforms:
-// - 'accept': User accepted privacy policy
-// - 'deny': User denied privacy policy
-// - 'skip': User skipped privacy policy
-// `);
