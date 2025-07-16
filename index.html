@@ -31,5 +31,18 @@
             <button class="privacy-btn skip hidden" id="skipButton">Skip for Now</button>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div class="consent-dialog-backdrop hidden" id="confirmationModal">
+        <div class="consent-dialog">
+            <button class="consent-dialog-close" id="modalClose">×</button>
+            <h2 class="consent-dialog-title">Are you sure you want to deny?</h2>
+            <p class="consent-dialog-desc">At Chalo, we need to collect your personal data to provide our services, and you have the right to manage it.</p>
+            <div class="consent-dialog-buttons">
+                <button class="consent-dialog-cancel" id="cancelDeny">Cancel</button>
+                <button class="consent-dialog-confirm" id="confirmDeny">Yes</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
