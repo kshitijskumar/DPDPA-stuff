@@ -1,150 +1,137 @@
-let showSkipButton = false;
-
-function getPlatform() {
-  if (typeof AndroidInterface !== 'undefined') return 'android';
-  if (window.webkit?.messageHandlers) return 'ios';
-  return 'web';
-}
-
-function configureConsentUI(shouldShowSkip) {
-  try {
-    console.log("Received skip button configuration:", shouldShowSkip);
-    showSkipButton = shouldShowSkip;
-    updateSkipButtonVisibility(shouldShowSkip);
-    return "Configuration applied successfully";
-  } catch (error) {
-    console.error("Error applying configuration:", error);
-    return "Error applying configuration";
+// Loader control functions
+function showLoader() {
+  const loader = document.getElementById('fullscreenLoader');
+  if (loader) {
+      loader.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
   }
 }
 
-function updateSkipButtonVisibility(shouldShow) {
-  const skipButton = document.getElementById('skipButton');
-  if (skipButton) {
-    skipButton.classList.toggle('hidden', !shouldShow);
-    console.log(`Skip button ${shouldShow ? 'shown' : 'hidden'}`);
+function hideLoader() {
+  const loader = document.getElementById('fullscreenLoader');
+  if (loader) {
+      loader.classList.add('hidden');
+      document.body.style.overflow = 'auto'; // Restore scrolling
   }
 }
 
-function toggleSkipButton(show) {
-  updateSkipButtonVisibility(show);
-  showSkipButton = show;
-  console.log(`Skip button manually ${show ? 'shown' : 'hidden'}`);
-}
+// Platform notification functions
+function notifyPlatform(action, data = {}) {
+  const message = {
+      action: action,
+      data: data,
+      timestamp: new Date().toISOString()
+  };
 
-function removeButtonFocus(button) {
-  if (button) button.blur();
-}
-
-function notifyPlatform(eventType) {
-  const payload = { message: `privacy_${eventType}` };
-
-  try {
-    // :white_check_mark: iOS
-    if (window.webkit?.messageHandlers?.nativeApp) {
-      window.webkit.messageHandlers.nativeApp.postMessage(payload);
-    }
-    // :white_check_mark: Android
-    else if (typeof AndroidInterface !== 'undefined') {
-      const methodName = `${eventType}Clicked`;
-      if (typeof AndroidInterface[methodName] === 'function') {
-        AndroidInterface[methodName]();
-      }
-    }
-    // :white_check_mark: Web fallback
-    else if (typeof window.postMessage === 'function') {
-      window.postMessage(payload, '*');
-    }
-  } catch (error) {
-    console.error(`Error during ${eventType} click`, error);
-    alert(`Privacy policy ${eventType}`);
+  // Web notification (postMessage to parent window)
+  if (window.parent && window.parent !== window) {
+      window.parent.postMessage(message, '*');
   }
+
+  // Android notification (if WebView interface exists)
+  if (typeof Android !== 'undefined' && Android.onConsentAction) {
+      Android.onConsentAction(JSON.stringify(message));
+  }
+
+  // iOS notification (if WebKit interface exists)
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.consentHandler) {
+      window.webkit.messageHandlers.consentHandler.postMessage(message);
+  }
+
 }
 
-function showConfirmationModal() {
-  const modal = document.getElementById('confirmationModal');
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden'; // Prevent background scrolling
-}
+// Global function to hide loader (can be called from native platforms)
+window.hideConsentLoader = function() {
+  hideLoader();
+};
 
-function hideConfirmationModal() {
-  const modal = document.getElementById('confirmationModal');
-  modal.classList.add('hidden');
-  document.body.style.overflow = ''; // Restore scrolling
-}
+// Global function to show loader (can be called from native platforms)
+window.showConsentLoader = function() {
+  showLoader();
+};
 
-function handleDenyConfirmation() {
-  hideConfirmationModal();
-  // Execute the original deny logic
-  notifyPlatform('deny');
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  const acceptButton = document.querySelector('.privacy-btn.accept');
-  const denyButton = document.querySelector('.privacy-btn.deny');
-  const skipButton = document.getElementById('skipButton');
-  
-  // Modal elements
-  const modal = document.getElementById('confirmationModal');
+// DOM Ready function
+document.addEventListener('DOMContentLoaded', function() {
+  // DOM elements
+  const acceptBtn = document.getElementById('acceptBtn');
+  const denyBtn = document.getElementById('denyBtn');
+  const skipBtn = document.getElementById('skipButton');
+  const confirmationModal = document.getElementById('confirmationModal');
   const modalClose = document.getElementById('modalClose');
-  const confirmDeny = document.getElementById('confirmDeny');
   const cancelDeny = document.getElementById('cancelDeny');
+  const confirmDeny = document.getElementById('confirmDeny');
 
-  if (acceptButton) {
-    acceptButton.addEventListener('click', function () {
-      notifyPlatform('accept');
-      removeButtonFocus(this);
-    });
-  }
-
-  if (denyButton) {
-    denyButton.addEventListener('click', function () {
-      showConfirmationModal();
-      removeButtonFocus(this);
-    });
-  }
-
-  if (skipButton) {
-    skipButton.addEventListener('click', function () {
-      notifyPlatform('skip');
-      removeButtonFocus(this);
-    });
-  }
-
-  // Modal event listeners
-  if (modalClose) {
-    modalClose.addEventListener('click', function () {
-      hideConfirmationModal();
-    });
-  }
-
-  if (confirmDeny) {
-    confirmDeny.addEventListener('click', function () {
-      handleDenyConfirmation();
-    });
-  }
-
-  if (cancelDeny) {
-    cancelDeny.addEventListener('click', function () {
-      hideConfirmationModal();
-    });
-  }
-
-  // Close modal when clicking outside
-  if (modal) {
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) {
-        hideConfirmationModal();
-      }
-    });
-  }
-
-  // Close modal with Escape key
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-      hideConfirmationModal();
-    }
+  // Event listeners
+  acceptBtn.addEventListener('click', function() {
+      showLoader();
+      notifyPlatform('accept', {
+          consent: true,
+          timestamp: new Date().toISOString()
+      });
   });
 
-  console.log('Platform:', getPlatform());
+  denyBtn.addEventListener('click', function() {
+      confirmationModal.classList.remove('hidden');
+  });
+
+  skipBtn.addEventListener('click', function() {
+      showLoader();
+      notifyPlatform('skip', {
+          consent: 'skipped',
+          timestamp: new Date().toISOString()
+      });
+  });
+
+  confirmDeny.addEventListener('click', function() {
+      confirmationModal.classList.add('hidden');
+      showLoader();
+      notifyPlatform('deny', {
+          consent: false,
+          timestamp: new Date().toISOString()
+      });
+  });
+
+  cancelDeny.addEventListener('click', function() {
+      confirmationModal.classList.add('hidden');
+  });
+
+  modalClose.addEventListener('click', function() {
+      confirmationModal.classList.add('hidden');
+  });
+
+  // Close modal when clicking outside
+  confirmationModal.addEventListener('click', function(e) {
+      if (e.target === confirmationModal) {
+          confirmationModal.classList.add('hidden');
+      }
+  });
 });
+
+// Handle messages from parent window (for web integration)
+window.addEventListener('message', function(event) {
+  if (event.data && event.data.action === 'hideLoader') {
+      hideLoader();
+  }
+});
+
+// Example usage and documentation
+// console.log(`
+// Privacy Consent Loader Integration:
+
+// Web Integration:
+// - Listen for postMessage events from this iframe
+// - Call window.hideConsentLoader() to hide the loader
+
+// Android Integration:
+// - Implement Android.onConsentAction(jsonString) in your WebView
+// - Call webView.loadUrl("javascript:window.hideConsentLoader()") to hide loader
+
+// iOS Integration:
+// - Add 'consentHandler' to WKWebView messageHandlers
+// - Call webView.evaluateJavaScript("window.hideConsentLoader()") to hide loader
+
+// Actions sent to platforms:
+// - 'accept': User accepted privacy policy
+// - 'deny': User denied privacy policy
+// - 'skip': User skipped privacy policy
+// `);
