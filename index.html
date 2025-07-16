@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="script.js"></script>
 </head>
 <body>
     <div class="privacy-modal-container">
@@ -26,8 +25,8 @@
         <p class="privacy-desc">Ticketing, live tracking, enhanced user experience, Chalo/ third party product/ services' promotions, security, compliance, research and analytics..</p>
         <div class="privacy-btn-group">
              <p class="privacy-consent">I am above 18 years, and have read, understood, and consent to Chalo's privacy policy. / My child is below 18 years, and I as the parent have read, understood, and consented to Chalo's privacy policy.</p>
-            <button class="privacy-btn accept">Accept</button>
-            <button class="privacy-btn deny">Deny</button>
+            <button class="privacy-btn accept" id="acceptBtn">Accept</button>
+            <button class="privacy-btn deny" id="denyBtn">Deny</button>
             <button class="privacy-btn skip hidden" id="skipButton">Skip for Now</button>
         </div>
     </div>
@@ -44,5 +43,15 @@
             </div>
         </div>
     </div>
+
+    <!-- Full Screen Loader -->
+    <div class="fullscreen-loader hidden" id="fullscreenLoader">
+        <div class="loader-container">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Loading...</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
