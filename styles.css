@@ -13,7 +13,7 @@ body {
     overflow-x: hidden;
 }
 
-/* ✅ Hidden class for conditional visibility */
+/* :white_check_mark: Hidden class for conditional visibility */
 .hidden {
     display: none !important;
 }
@@ -131,7 +131,7 @@ body {
     background: #e0e0e0;
 }
 
-/* ✅ Skip button styling - same as deny button */
+/* :white_check_mark: Skip button styling - same as deny button */
 .privacy-btn.skip {
     background: #f2f2f2;
     color: #444;
@@ -175,7 +175,8 @@ body {
     border-radius: 10px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     width: 90vw;
-    padding: 48px 16px 16px 16px;
+    max-width: 400px;
+    padding: 48px 24px 24px 24px;
     position: relative;
     text-align: left;
     animation: fadeInDialog 0.2s;
@@ -204,30 +205,53 @@ body {
 .consent-dialog-title {
     font-size: 18px;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 16px;
     color: #323232;
 }
 
 .consent-dialog-desc {
     font-size: 14px;
     color: #323232;
-    margin-bottom: 36px;
+    margin-bottom: 32px;
     text-align: left;
     letter-spacing: normal;
+    line-height: 1.4;
 }
 
-.consent-dialog-gotit {
-    width: 100%;
-    background: #ff8800;
-    color: #fff;
-    font-size: 1rem;
+.consent-dialog-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.consent-dialog-cancel {
+    background: transparent;
+    color: #ff8800;
+    font-size: 14px;
     font-weight: 600;
     border: none;
     border-radius: 8px;
-    padding: 14px 0;
+    padding: 12px 20px;
     cursor: pointer;
+    min-width: 80px;
 }
 
-.consent-dialog-gotit:hover {
+.consent-dialog-cancel:hover {
+    background: rgba(255, 136, 0, 0.1);
+}
+
+.consent-dialog-confirm {
+    background: #ff8800;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    min-width: 80px;
+}
+
+.consent-dialog-confirm:hover {
     background: #e67600;
 }
