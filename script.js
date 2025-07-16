@@ -1,111 +1,91 @@
-// ✅ Simple configuration for skip button visibility
 let showSkipButton = false;
 
-// ✅ Platform detection function
 function getPlatform() {
-    if (typeof AndroidInterface !== 'undefined') return 'android';
-    if (typeof window.webkit !== 'undefined' && window.webkit.messageHandlers) return 'ios';
-    return 'unknown';
+  if (typeof AndroidInterface !== 'undefined') return 'android';
+  if (window.webkit?.messageHandlers) return 'ios';
+  return 'web';
 }
 
-// ✅ Main function to configure skip button visibility from native
 function configureConsentUI(shouldShowSkip) {
-    try {
-        console.log("Received skip button configuration:", shouldShowSkip);
-        
-        // Update global flag
-        showSkipButton = shouldShowSkip;
-        
-        // Update UI based on configuration
-        updateSkipButtonVisibility(shouldShowSkip);
-        
-        return "Configuration applied successfully";
-        
-    } catch (error) {
-        console.error("Error applying configuration:", error);
-        return "Error applying configuration";
-    }
+  try {
+    console.log("Received skip button configuration:", shouldShowSkip);
+    showSkipButton = shouldShowSkip;
+    updateSkipButtonVisibility(shouldShowSkip);
+    return "Configuration applied successfully";
+  } catch (error) {
+    console.error("Error applying configuration:", error);
+    return "Error applying configuration";
+  }
 }
 
-// ✅ Update skip button visibility
 function updateSkipButtonVisibility(shouldShow) {
-    const skipButton = document.getElementById('skipButton');
-    
-    if (shouldShow) {
-        skipButton.classList.remove('hidden');
-        console.log("Skip button shown");
-    } else {
-        skipButton.classList.add('hidden');
-        console.log("Skip button hidden");
-    }
+  const skipButton = document.getElementById('skipButton');
+  if (skipButton) {
+    skipButton.classList.toggle('hidden', !shouldShow);
+    console.log(`Skip button ${shouldShow ? 'shown' : 'hidden'}`);
+  }
 }
 
-// ✅ Function to manually toggle skip button (for testing or dynamic changes)
 function toggleSkipButton(show) {
-    updateSkipButtonVisibility(show);
-    showSkipButton = show;
-    console.log(`Skip button ${show ? 'shown' : 'hidden'}`);
+  updateSkipButtonVisibility(show);
+  showSkipButton = show;
+  console.log(`Skip button manually ${show ? 'shown' : 'hidden'}`);
 }
 
-// ✅ Remove focus from button after click
 function removeButtonFocus(button) {
-    if (button) {
-        button.blur();
+  if (button) button.blur();
+}
+
+function notifyPlatform(eventType) {
+  const payload = { message: `privacy_${eventType}` };
+
+  try {
+    // :white_check_mark: iOS
+    if (window.webkit?.messageHandlers?.nativeApp) {
+      window.webkit.messageHandlers.nativeApp.postMessage(payload);
     }
+    // :white_check_mark: Android
+    else if (typeof AndroidInterface !== 'undefined') {
+      const methodName = `${eventType}Clicked`;
+      if (typeof AndroidInterface[methodName] === 'function') {
+        AndroidInterface[methodName]();
+      }
+    }
+    // :white_check_mark: Web fallback
+    else if (typeof window.postMessage === 'function') {
+      window.postMessage(payload, '*');
+    }
+  } catch (error) {
+    console.error(`Error during ${eventType} click`, error);
+    alert(`Privacy policy ${eventType}`);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    const acceptButton = document.querySelector('.privacy-btn.accept');
-    const denyButton = document.querySelector('.privacy-btn.deny');
-    const skipButton = document.getElementById('skipButton');
-    
-    // Accept button click event
+  const acceptButton = document.querySelector('.privacy-btn.accept');
+  const denyButton = document.querySelector('.privacy-btn.deny');
+  const skipButton = document.getElementById('skipButton');
+
+  if (acceptButton) {
     acceptButton.addEventListener('click', function () {
-        console.log('User accepted privacy policy');
-        
-        try {
-            AndroidInterface.acceptClicked();
-            removeButtonFocus(this);
-        } catch (error) {
-            console.error('Error calling mobile app callback:', error);
-            alert('Thank you for accepting our privacy policy!');
-        }
+      notifyPlatform('accept');
+      removeButtonFocus(this);
     });
+  }
 
-    // Deny button click event
+  if (denyButton) {
     denyButton.addEventListener('click', function () {
-        console.log('User denied privacy policy');
-        
-        try {
-            AndroidInterface.denyClicked();
-            removeButtonFocus(this);
-        } catch (error) {
-            console.error('Error calling mobile app callback:', error);
-            alert('Privacy policy denied');
-        }
+      notifyPlatform('deny');
+      removeButtonFocus(this);
     });
-    
-    // ✅ Skip button click event
-    skipButton.addEventListener('click', function () {
-        console.log('User skipped privacy policy');
-        
-        try {
-            AndroidInterface.skipClicked();
-            removeButtonFocus(this);
-        } catch (error) {
-            console.error('Error calling mobile app callback:', error);
-            alert('Privacy policy skipped for now');
-        }
-    });
-    
-    // ✅ Log platform detection on page load
-    console.log('Platform detection:', {
-        platform: getPlatform(),
-        isAndroid: typeof AndroidInterface !== 'undefined',
-        isIOS: typeof window.webkit !== 'undefined'
-    });
-    
-    // ✅ Log initial skip button state
-    console.log("Initial skip button state: hidden");
-});
+  }
 
+  if (skipButton) {
+    skipButton.addEventListener('click', function () {
+      notifyPlatform('skip');
+      removeButtonFocus(this);
+    });
+  }
+
+  console.log('Platform:', getPlatform());
+});
