@@ -16,29 +16,30 @@ function hideLoader() {
 }
 
 // Platform notification functions
-function notifyPlatform(action, data = {}) {
-  const message = {
-      action: action,
-      data: data,
-      timestamp: new Date().toISOString()
-  };
-
-  // Web notification (postMessage to parent window)
-  if (window.parent && window.parent !== window) {
-      window.parent.postMessage(message, '*');
+function notifyPlatform(eventType) {
+    const payload = { message: `privacy_${eventType}` };
+  
+    try {
+      // :white_check_mark: iOS
+      if (window.webkit?.messageHandlers?.nativeApp) {
+        window.webkit.messageHandlers.nativeApp.postMessage(payload);
+      }
+      // :white_check_mark: Android
+      else if (typeof AndroidInterface !== 'undefined') {
+        const methodName = `${eventType}Clicked`;
+        if (typeof AndroidInterface[methodName] === 'function') {
+          AndroidInterface[methodName]();
+        }
+      }
+      // :white_check_mark: Web fallback
+      else if (typeof window.postMessage === 'function') {
+        window.postMessage(payload, '*');
+      }
+    } catch (error) {
+      console.error(`Error during ${eventType} click`, error);
+      alert(`Privacy policy ${eventType}`);
+    }
   }
-
-  // Android notification (if WebView interface exists)
-  if (typeof Android !== 'undefined' && Android.onConsentAction) {
-      Android.onConsentAction(JSON.stringify(message));
-  }
-
-  // iOS notification (if WebKit interface exists)
-  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.consentHandler) {
-      window.webkit.messageHandlers.consentHandler.postMessage(message);
-  }
-
-}
 
 // Global function to hide loader (can be called from native platforms)
 window.hideConsentLoader = function() {
