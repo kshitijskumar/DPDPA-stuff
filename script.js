@@ -86,13 +86,13 @@ function notifyPlatform(eventType) {
       window.webkit.messageHandlers.consentHandler.postMessage(message);
     }
 
-    if (eventType === 'accept' && window.webkit?.messageHandlers?.acceptClicked) {
-        window.webkit.messageHandlers.acceptClicked.postMessage(null);
-    }
+    // if (eventType === 'accept' && window.webkit?.messageHandlers?.acceptClicked) {
+    //     window.webkit.messageHandlers.acceptClicked.postMessage(null);
+    // }
 
-    if (eventType === 'deny' && window.webkit?.messageHandlers?.denyClicked) {
-        window.webkit.messageHandlers.denyClicked.postMessage(message);
-    }
+    // if (eventType === 'deny' && window.webkit?.messageHandlers?.denyClicked) {
+    //     window.webkit.messageHandlers.denyClicked.postMessage(message);
+    // }
     // :white_check_mark: Android - Fixed to use original naming convention
     else if (typeof AndroidInterface !== 'undefined') {
       if (eventType === 'accept') {
