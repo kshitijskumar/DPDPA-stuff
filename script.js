@@ -142,7 +142,7 @@ function hideConfirmationModal() {
 
 function handleDenyConfirmation() {
   hideConfirmationModal();
-  showLoader();
+  // showLoader();
   // Execute the original deny logic
   notifyPlatform('deny');
 }
