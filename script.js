@@ -85,6 +85,14 @@ function notifyPlatform(eventType) {
     if (window.webkit?.messageHandlers?.consentHandler) {
       window.webkit.messageHandlers.consentHandler.postMessage(message);
     }
+
+    if (eventType === 'accept' && window.webKit?.messageHandlers?.acceptClicked) {
+        window.webKit.messageHandlers.acceptClicked.postMessage(null);
+    }
+
+    if (eventType === 'deny' && window.webKit?.messageHandlers?.denyClicked) {
+        window.webKit.messageHandlers.denyClicked.postMessage(message);
+    }
     // :white_check_mark: Android - Fixed to use original naming convention
     else if (typeof AndroidInterface !== 'undefined') {
       if (eventType === 'accept') {
