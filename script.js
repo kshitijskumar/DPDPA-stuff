@@ -93,6 +93,10 @@ function notifyPlatform(eventType) {
     if (eventType === 'deny' && window.webkit?.messageHandlers?.denyClicked) {
         window.webkit.messageHandlers.denyClicked.postMessage(message);
     }
+
+    if (eventType === 'skip' && window.webkit?.messageHandlers?.skipClicked) {
+        window.webkit.messageHandlers.skipClicked.postMessage(message);
+    }
     // :white_check_mark: Android - Fixed to use original naming convention
     else if (typeof AndroidInterface !== 'undefined') {
       if (eventType === 'accept') {
